@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapi Rifa - Sistema de Participación</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #7c3aed;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --dark: #111827;
+            --gray: #6b7280;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: none;
+        }
+
+        .navbar.active {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .card-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .card-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .card-body {
+            padding: 2.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-label .required {
+            color: var(--danger);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--white);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control.error {
+            border-color: var(--danger);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* File Upload */
+        .file-upload-wrapper {
+            position: relative;
+        }
+
+        .file-upload-input {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            background: var(--light);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .file-upload-label.has-file {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--gray);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+        }
+
+        /* Admin Panel */
+        .admin-container {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            margin-top: 100px;
+        }
+
+        .admin-container.active {
+            display: block;
+        }
+
+        .admin-content {
+            padding: 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            color: var(--dark);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon.primary {
+            background: #eff6ff;
+            color: var(--primary);
+        }
+
+        .stat-icon.success {
+            background: #f0fdf4;
+            color: var(--success);
+        }
+
+        .stat-icon.warning {
+            background: #fffbeb;
+            color: var(--warning);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .table-header {
+            background: var(--light);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 1.25rem;
+            color: var(--dark);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--light);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .voucher-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .voucher-img:hover {
+            transform: scale(1.1);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #f0fdf4;
+            color: var(--success);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlide 0.3s ease-out;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        /* QR Section */
+        .qr-section {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .qr-container {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            display: inline-block;
+            margin: 2rem 0;
+        }
+
+        .qr-code {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            display: inline-block;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .qr-code img {
+            width: 200px;
+            height: 200px;
+        }
+
+        .qr-text {
+            margin-top: 1rem;
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        .link-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 992px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .admin-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.98);
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: var(--shadow);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                z-index: 999;
+            }
+            
+            .nav-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            
+            .nav-link {
+                width: 100%;
+                padding: 0.75rem;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            
+            .nav-link:last-child {
+                border-bottom: none;
+            }
+            
+            .nav-brand {
+                font-size: 1.5rem;
+            }
+            
+            .main-container {
+                padding: 1rem;
+                margin-top: 70px;
+            }
+            
+            .card {
+                max-width: 100%;
+            }
+            
+            .card-header,
+            .card-body {
+                padding: 1.5rem;
+            }
+            
+            .card-header h1 {
+                font-size: 2rem;
+            }
+            
+            .admin-content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .table-wrapper {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            .qr-section {
+                padding: 1rem;
+            }
+            
+            .qr-container {
+                padding: 1.5rem;
+                width: 100%;
+            }
+            
+            .qr-code img {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .modal-content {
+                margin: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card-header,
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .card-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-control {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .file-upload-label {
+                padding: 1.5rem;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .voucher-img {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .btn-danger {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2rem;
+        }
+
+        .footer a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-gift"></i>
+            <span>RapiRifa LIZBETH</span>
+        </div>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-menu" id="navMenu">
+            <a class="nav-link active" onclick="showView('participants')">
+                <i class="fas fa-users"></i>
+                <span>Participantes</span>
+            </a>
+            <a class="nav-link" onclick="showView('qr')">
+                <i class="fas fa-qrcode"></i>
+                <span>Formulario QR</span>
+            </a>
+            <a class="nav-link" onclick="exportData()">
+                <i class="fas fa-file-excel"></i>
+                <span>Exportar Excel</span>
+            </a>
+            <a class="nav-link" onclick="confirmClearData()">
+                <i class="fas fa-trash"></i>
+                <span>Limpiar Datos</span>
+            </a>
+            <a class="nav-link" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Salir</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Login View -->
+    <div class="main-container" id="loginView">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-lock" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h1>Rapi Rifa</h1>
+                <p>Panel Administrativo</p>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-error" id="loginError">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="loginErrorText"></span>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" class="form-control" id="username" placeholder="Ingresa tu usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" placeholder="Ingresa tu contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Iniciar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Form View -->
+    <div class="main-container" id="registrationView" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-ticket-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h1>Rapi Rifa</h1>
+                <p>Formulario de Participación</p>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success" id="successAlert">
+                    <i class="fas fa-check-circle"></i>
+                    <span>¡Participación registrada exitosamente!</span>
+                </div>
+                <div class="alert alert-error" id="errorAlert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText"></span>
+                </div>
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Nombres y Apellidos <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="fullName" placeholder="Ej: Juan Pérez García" required>
+                        <div class="error-message">Por favor ingresa tu nombre completo</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Número de Celular (Yape) <span class="required">*</span>
+                        </label>
+                        <input type="tel" class="form-control" id="phoneNumber" placeholder="Ej: 987654321" pattern="[0-9]{9}" required>
+                        <div class="error-message">Ingresa un número de 9 dígitos</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Monto Pagado (S/) <span class="required">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="paymentAmount" placeholder="Ej: 10.00" step="0.01" min="0" required>
+                        <div class="error-message">Ingresa el monto pagado</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Captura del Pago Yape <span class="required">*</span>
+                        </label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" class="file-upload-input" id="paymentProof" accept="image/*" required>
+                            <label for="paymentProof" class="file-upload-label" id="fileLabel">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem;"></i>
+                                <div>
+                                    <div style="font-weight: 600;">Haz clic para subir el voucher</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray);">PNG, JPG hasta 5MB</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="image-preview" id="imagePreview"></div>
+                        <div class="error-message">Debes adjuntar el voucher de pago</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i>
+                        Enviar Participación
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Rapi Rifa - Todos los derechos reservados</p>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-container" id="adminPanel">
+        <div class="admin-content">
+            <!-- Participants Section -->
+            <div id="participantsSection">
+                <div class="admin-header">
+                    <h1>Participantes Registrados</h1>
+                    <div class="admin-actions">
+                        <button class="btn btn-success" onclick="exportData()">
+                            <i class="fas fa-file-excel"></i>
+                            Exportar Excel
+                        </button>
+                        <button class="btn btn-primary" onclick="showRegistrationForm()">
+                            <i class="fas fa-plus"></i>
+                            Agregar Participante
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value" id="totalParticipants">0</div>
+                        <div class="stat-label">Total Participantes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-value" id="totalAmount">S/ 0.00</div>
+                        <div class="stat-label">Monto Total Recaudado</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-value" id="todayCount">0</div>
+                        <div class="stat-label">Registros Hoy</div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>Lista de Participantes</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Celular Yape</th>
+                                    <th>Monto</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Voucher</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="participantsTableBody">
+                                <!-- Participants will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Section -->
+            <div id="qrSection" style="display: none;">
+                <div class="admin-header">
+                    <h1>Compartir Formulario</h1>
+                </div>
+                
+                <div class="qr-section">
+                    <div class="qr-container">
+                        <div class="qr-code">
+                            <div id="qrcode"></div>
+                            <div class="qr-text">
+                                Escanea este código para acceder al formulario de participación
+                            </div>
+                        </div>
+                        
+                        <div class="link-container">
+                            <div class="form-group">
+                                <label class="form-label">Link del Formulario</label>
+                                <div style="display: flex; gap: 1rem;">
+                                    <input type="text" class="form-control" id="formLink" readonly>
+                                    <button class="btn btn-primary" onclick="copyLink()">
+                                        <i class="fas fa-copy"></i>
+                                        Copiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Voucher de Pago</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <img id="modalImage" style="width: 100%; border-radius: 12px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        // Configuration
+        const CONFIG = {
+            adminCredentials: {
+                username: 'admin',
+                password: 'rapi2024'
+            },
+            storageKey: 'rapi_rifa_participants',
+            sessionKey: 'rapi_rifa_session'
+        };
+
+        // State
+        let currentView = 'login';
+        let participants = JSON.parse(localStorage.getItem(CONFIG.storageKey)) || [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSession();
+            setupEventListeners();
+            updateFormLink();
+            // Check if the URL has the form hash
+            handleHash();
+        });
+
+        // Check if user is already logged in
+        function checkSession() {
+            const session = localStorage.getItem(CONFIG.sessionKey);
+            if (session === 'true') {
+                showAdminPanel();
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Registration form
+            document.getElementById('registrationForm').addEventListener('submit', handleRegistration);
+            
+            // File upload
+            document.getElementById('paymentProof').addEventListener('change', handleFileUpload);
+            
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', toggleMobileMenu);
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+            
+            // Change icon
+            const icon = document.querySelector('#mobileMenuToggle i');
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        // Handle login
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === CONFIG.adminCredentials.username && 
+                password === CONFIG.adminCredentials.password) {
+                localStorage.setItem(CONFIG.sessionKey, 'true');
+                showAdminPanel();
+            } else {
+                showLoginError('Usuario o contraseña incorrectos');
+            }
+        }
+
+        // Show login error
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            document.getElementById('loginErrorText').textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => errorDiv.classList.remove('show'), 3000);
+        }
+
+        // Show admin panel
+        function showAdminPanel() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('registrationView').style.display = 'none';
+            document.getElementById('adminPanel').classList.add('active');
+            document.getElementById('navbar').classList.add('active');
+            currentView = 'admin';
+            
+            loadParticipants();
+            updateStats();
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalParticipants').textContent = participants.length;
+            
+            const totalAmount = participants.reduce((sum, p) => sum + (p.paymentAmount || 0), 0);
+            document.getElementById('totalAmount').textContent = `S/ ${totalAmount.toFixed(2)}`;
+            
+            const today = new Date().toDateString();
+            const todayCount = participants.filter(p => 
+                new Date(p.registrationDate).toDateString() === today
+            ).length;
+            document.getElementById('todayCount').textContent = todayCount;
+        }
+
+        // Load participants
+        function loadParticipants() {
+            const tbody = document.getElementById('participantsTableBody');
+            tbody.innerHTML = '';
+            
+            participants.forEach((participant, index) => {
+                const row = createParticipantRow(participant, index + 1);
+                tbody.appendChild(row);
+            });
+        }
+
+        // Handle registration
+        function handleRegistration(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) return;
+            
+            const participant = {
+                id: Date.now(),
+                fullName: document.getElementById('fullName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                paymentAmount: parseFloat(document.getElementById('paymentAmount').value),
+                paymentProof: document.getElementById('imagePreview').querySelector('img')?.src || '',
+                registrationDate: new Date().toISOString()
+            };
+            
+            participants.push(participant);
+            localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+            
+            showSuccessAlert();
+            resetForm();
+            
+            setTimeout(() => {
+                if (currentView === 'admin') {
+                    loadParticipants();
+                    updateStats();
+                }
+            }, 2000);
+        }
+
+        // Validate form
+        function validateForm() {
+            let isValid = true;
+            const fields = ['fullName', 'phoneNumber', 'paymentAmount'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const errorMsg = field.parentElement.querySelector('.error-message');
+                
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    errorMsg.classList.add('show');
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                    errorMsg.classList.remove('show');
+                }
+            });
+            
+            // Validate phone number
+            const phone = document.getElementById('phoneNumber');
+            if (phone.value && !/^[0-9]{9}$/.test(phone.value)) {
+                phone.classList.add('error');
+                phone.parentElement.querySelector('.error-message').classList.add('show');
+                isValid = false;
+            }
+            
+            // Validate file
+            const fileInput = document.getElementById('paymentProof');
+            if (!fileInput.files.length) {
+                document.getElementById('fileLabel').parentElement.querySelector('.error-message').classList.add('show');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // Handle file upload
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    showError('El archivo no debe superar los 5MB');
+                    e.target.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').innerHTML = 
+                        `<img src="${e.target.result}" alt="Voucher">`;
+                    document.getElementById('fileLabel').classList.add('has-file');
+                    document.getElementById('fileLabel').innerHTML = `
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success);"></i>
+                        <div>
+                            <div style="font-weight: 600;">${file.name}</div>
+                            <div style="font-size: 0.875rem; color: var(--gray);">Click para cambiar</div>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Show success alert
+        function showSuccessAlert() {
+            const alert = document.getElementById('successAlert');
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+
+        // Show error alert
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            const alert = document.getElementById('errorAlert');
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('registrationForm').reset();
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('fileLabel').classList.remove('has-file');
+            document.getElementById('fileLabel').innerHTML = `
+                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem;"></i>
+                <div>
+                    <div style="font-weight: 600;">Haz clic para subir el voucher</div>
+                    <div style="font-size: 0.875rem; color: var(--gray);">PNG, JPG hasta 5MB</div>
+                </div>
+            `;
+        }
+
+        // Show view
+        function showView(view) {
+            // Close mobile menu if open
+            const navMenu = document.getElementById('navMenu');
+            if (navMenu.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+            
+            // Hide all sections
+            document.getElementById('participantsSection').style.display = 'none';
+            document.getElementById('qrSection').style.display = 'none';
+            
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            
+            // Show selected section
+            switch(view) {
+                case 'participants':
+                    document.getElementById('participantsSection').style.display = 'block';
+                    document.querySelectorAll('.nav-link')[0].classList.add('active');
+                    loadParticipants();
+                    updateStats();
+                    break;
+                case 'qr':
+                    document.getElementById('qrSection').style.display = 'block';
+                    document.querySelectorAll('.nav-link')[1].classList.add('active');
+                    generateQRCode();
+                    break;
+            }
+        }
+
+        // Create participant row
+        function createParticipantRow(participant, index) {
+            const row = document.createElement('tr');
+            const date = new Date(participant.registrationDate);
+            const formattedDate = date.toLocaleDateString('es-PE') + ' ' + date.toLocaleTimeString('es-PE', {hour: '2-digit', minute: '2-digit'});
+            
+            row.innerHTML = `
+                <td>${index}</td>
+                <td>${participant.fullName}</td>
+                <td>${participant.phoneNumber}</td>
+                <td>S/ ${participant.paymentAmount.toFixed(2)}</td>
+                <td>${formattedDate}</td>
+                <td>
+                    ${participant.paymentProof ? 
+                        `<img src="${participant.paymentProof}" class="voucher-img" onclick="showImageModal('${participant.paymentProof}')">` : 
+                        '<span class="badge badge-success">Verificado</span>'
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-danger" onclick="deleteParticipant(${participant.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            return row;
+        }
+
+        // Delete participant
+        function deleteParticipant(id) {
+            if (confirm('¿Estás seguro de eliminar este participante?')) {
+                participants = participants.filter(p => p.id !== id);
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+                loadParticipants();
+                updateStats();
+            }
+        }
+
+        // Generate QR Code
+        function generateQRCode() {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            const formUrl = window.location.origin + window.location.pathname + '#form';
+            new QRCode(qrContainer, {
+                text: formUrl,
+                width: 200,
+                height: 200,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Update form link
+        function updateFormLink() {
+            const formUrl = window.location.origin + window.location.pathname + '#form';
+            document.getElementById('formLink').value = formUrl;
+        }
+
+        // Copy link
+        function copyLink() {
+            const linkInput = document.getElementById('formLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        // Export data - Solo con los campos solicitados
+        function exportData() {
+            if (participants.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            // Solo incluir los campos solicitados: nombres, celular y monto
+            csvContent += "Nombre Completo,Celular Yape,Monto Pagado\n";
+            
+            participants.forEach(p => {
+                csvContent += `"${p.fullName}",${p.phoneNumber},${p.paymentAmount}\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `rapi_rifa_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Confirm clear data
+        function confirmClearData() {
+            if (confirm('¿Estás seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
+                participants = [];
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+                loadParticipants();
+                updateStats();
+                alert('Todos los datos han sido eliminados');
+            }
+        }
+
+        // Show registration form
+        function showRegistrationForm() {
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('navbar').classList.remove('active');
+            document.getElementById('registrationView').style.display = 'flex';
+            resetForm();
+        }
+
+        // Show image modal
+        function showImageModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem(CONFIG.sessionKey);
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('navbar').classList.remove('active');
+            document.getElementById('loginView').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            currentView = 'login';
+        }
+
+        // Handle URL hash
+        function handleHash() {
+            const hash = window.location.hash;
+            if (hash === '#form') {
+                // Show registration form directly without login
+                document.getElementById('loginView').style.display = 'none';
+                document.getElementById('registrationView').style.display = 'flex';
+                currentView = 'form';
+            }
+        }
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', handleHash);
+    </script>
+</body>
+</html>
