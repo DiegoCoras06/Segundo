@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -629,6 +630,40 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Sync Status */
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--white);
+            padding: 0.75rem 1rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sync-status.show {
+            opacity: 1;
+        }
+
+        .sync-status.success {
+            color: var(--success);
+        }
+
+        .sync-status.error {
+            color: var(--danger);
+        }
+
+        .sync-status i {
+            font-size: 1rem;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .navbar {
@@ -1020,6 +1055,12 @@
         </div>
     </div>
 
+    <!-- Sync Status Indicator -->
+    <div class="sync-status" id="syncStatus">
+        <i class="fas fa-sync-alt"></i>
+        <span id="syncStatusText">Sincronizando datos...</span>
+    </div>
+
     <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
@@ -1032,23 +1073,271 @@
             },
             // Usamos una clave de almacenamiento universal que funcione en cualquier dominio
             storageKey: 'rapi_rifa_participants_universal',
-            sessionKey: 'rapi_rifa_session_universal'
+            sessionKey: 'rapi_rifa_session_universal',
+            // Configuración de sincronización
+            syncInterval: 30000, // 30 segundos
+            maxRetries: 3,
+            retryDelay: 5000 // 5 segundos
         };
 
         // State
         let currentView = 'login';
         let participants = [];
+        let syncTimer = null;
+        let isOnline = navigator.onLine;
+        let pendingSync = false;
+
+        // IndexedDB setup
+        let db = null;
+
+        // Initialize IndexedDB
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('RapiRifaDB', 1);
+                
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.error);
+                    reject(event.target.error);
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB initialized successfully');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    if (!db.objectStoreNames.contains('participants')) {
+                        const objectStore = db.createObjectStore('participants', { keyPath: 'id' });
+                        objectStore.createIndex('registrationDate', 'registrationDate', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // Save participant to IndexedDB
+        function saveParticipantToIndexedDB(participant) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['participants'], 'readwrite');
+                const objectStore = transaction.objectStore('participants');
+                const request = objectStore.add(participant);
+                
+                request.onsuccess = () => {
+                    resolve();
+                };
+                
+                request.onerror = (event) => {
+                    console.error('Error saving to IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Get all participants from IndexedDB
+        function getParticipantsFromIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['participants'], 'readonly');
+                const objectStore = transaction.objectStore('participants');
+                const request = objectStore.getAll();
+                
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+                
+                request.onerror = (event) => {
+                    console.error('Error getting from IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            checkSession();
-            setupEventListeners();
-            updateFormLink();
-            loadParticipantsFromStorage();
+            // Initialize IndexedDB first
+            initIndexedDB()
+                .then(() => {
+                    // Then initialize the rest of the app
+                    checkSession();
+                    setupEventListeners();
+                    updateFormLink();
+                    loadParticipantsFromStorage();
+                    
+                    // Set up online/offline event listeners
+                    window.addEventListener('online', handleOnline);
+                    window.addEventListener('offline', handleOffline);
+                    
+                    // Start periodic sync
+                    startPeriodicSync();
+                })
+                .catch(error => {
+                    console.error('Failed to initialize IndexedDB:', error);
+                    // Fallback to localStorage if IndexedDB fails
+                    checkSession();
+                    setupEventListeners();
+                    updateFormLink();
+                    loadParticipantsFromStorage();
+                });
         });
+
+        // Handle online event
+        function handleOnline() {
+            isOnline = true;
+            showSyncStatus('Conexión restablecida', 'success');
+            if (pendingSync) {
+                syncData();
+            }
+        }
+
+        // Handle offline event
+        function handleOffline() {
+            isOnline = false;
+            showSyncStatus('Trabajando sin conexión', 'error');
+        }
+
+        // Start periodic sync
+        function startPeriodicSync() {
+            if (syncTimer) {
+                clearInterval(syncTimer);
+            }
+            
+            syncTimer = setInterval(() => {
+                if (isOnline) {
+                    syncData();
+                }
+            }, CONFIG.syncInterval);
+        }
+
+        // Sync data between storage mechanisms
+        function syncData() {
+            if (!isOnline) {
+                pendingSync = true;
+                return;
+            }
+            
+            showSyncStatus('Sincronizando datos...', 'info');
+            
+            try {
+                // Get data from IndexedDB
+                if (db) {
+                    getParticipantsFromIndexedDB()
+                        .then(indexedDBData => {
+                            // Get data from localStorage
+                            const localStorageData = JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]');
+                            
+                            // Merge data
+                            const mergedData = mergeData(indexedDBData, localStorageData);
+                            
+                            // Save merged data to all storage mechanisms
+                            participants = mergedData;
+                            saveParticipantsToStorage();
+                            
+                            // Update UI if in admin panel
+                            if (currentView === 'admin') {
+                                loadParticipants();
+                                updateStats();
+                            }
+                            
+                            showSyncStatus('Datos sincronizados', 'success');
+                            pendingSync = false;
+                        })
+                        .catch(error => {
+                            console.error('Error syncing from IndexedDB:', error);
+                            fallbackSync();
+                        });
+                } else {
+                    fallbackSync();
+                }
+            } catch (error) {
+                console.error('Error during sync:', error);
+                showSyncStatus('Error al sincronizar', 'error');
+            }
+        }
+
+        // Fallback sync using localStorage
+        function fallbackSync() {
+            try {
+                const localStorageData = JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]');
+                participants = localStorageData;
+                
+                // Update UI if in admin panel
+                if (currentView === 'admin') {
+                    loadParticipants();
+                    updateStats();
+                }
+                
+                showSyncStatus('Datos sincronizados', 'success');
+                pendingSync = false;
+            } catch (error) {
+                console.error('Error in fallback sync:', error);
+                showSyncStatus('Error al sincronizar', 'error');
+            }
+        }
+
+        // Merge data from different sources
+        function mergeData(source1, source2) {
+            const merged = [...source1];
+            
+            // Add items from source2 that don't exist in source1
+            source2.forEach(item2 => {
+                if (!merged.find(item1 => item1.id === item2.id)) {
+                    merged.push(item2);
+                }
+            });
+            
+            // Sort by registration date (newest first)
+            merged.sort((a, b) => new Date(b.registrationDate) - new Date(a.registrationDate));
+            
+            return merged;
+        }
+
+        // Show sync status
+        function showSyncStatus(message, type) {
+            const syncStatus = document.getElementById('syncStatus');
+            const syncStatusText = document.getElementById('syncStatusText');
+            
+            syncStatusText.textContent = message;
+            syncStatus.className = `sync-status show ${type}`;
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                syncStatus.classList.remove('show');
+            }, 3000);
+        }
 
         // Función para cargar participantes desde el almacenamiento
         function loadParticipantsFromStorage() {
+            try {
+                // Intentar cargar desde IndexedDB
+                if (db) {
+                    getParticipantsFromIndexedDB()
+                        .then(data => {
+                            participants = data;
+                            
+                            // Update UI if in admin panel
+                            if (currentView === 'admin') {
+                                loadParticipants();
+                                updateStats();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading from IndexedDB:', error);
+                            // Fallback to localStorage
+                            loadFromLocalStorage();
+                        });
+                } else {
+                    // Fallback to localStorage
+                    loadFromLocalStorage();
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                participants = [];
+            }
+        }
+
+        // Load from localStorage as fallback
+        function loadFromLocalStorage() {
             try {
                 // Intentar cargar desde localStorage
                 const storedData = localStorage.getItem(CONFIG.storageKey);
@@ -1061,8 +1350,14 @@
                         participants = JSON.parse(sessionData);
                     }
                 }
+                
+                // Update UI if in admin panel
+                if (currentView === 'admin') {
+                    loadParticipants();
+                    updateStats();
+                }
             } catch (error) {
-                console.error('Error al cargar datos:', error);
+                console.error('Error loading from localStorage:', error);
                 participants = [];
             }
         }
@@ -1071,10 +1366,25 @@
         function saveParticipantsToStorage() {
             try {
                 const dataString = JSON.stringify(participants);
+                
                 // Guardar en localStorage
                 localStorage.setItem(CONFIG.storageKey, dataString);
                 // También guardar en sessionStorage como respaldo
                 sessionStorage.setItem(CONFIG.storageKey, dataString);
+                
+                // Guardar en IndexedDB si está disponible
+                if (db) {
+                    const transaction = db.transaction(['participants'], 'readwrite');
+                    const objectStore = transaction.objectStore('participants');
+                    
+                    // Clear existing data
+                    objectStore.clear();
+                    
+                    // Add all participants
+                    participants.forEach(participant => {
+                        objectStore.add(participant);
+                    });
+                }
             } catch (error) {
                 console.error('Error al guardar datos:', error);
             }
@@ -1180,8 +1490,27 @@
             participants.push(participant);
             saveParticipantsToStorage(); // Usar nuestra función de guardado
             
+            // Try to save to IndexedDB as well
+            if (db) {
+                saveParticipantToIndexedDB(participant)
+                    .then(() => {
+                        console.log('Participant saved to IndexedDB');
+                    })
+                    .catch(error => {
+                        console.error('Error saving to IndexedDB:', error);
+                    });
+            }
+            
             showSuccessAlert();
             resetForm();
+            
+            // Trigger sync
+            if (isOnline) {
+                syncData();
+            } else {
+                pendingSync = true;
+                showSyncStatus('Se sincronizará cuando haya conexión', 'info');
+            }
             
             setTimeout(() => {
                 if (currentView === 'admin') {
@@ -1341,6 +1670,14 @@
             if (confirm('¿Estás seguro de eliminar este participante?')) {
                 participants = participants.filter(p => p.id !== id);
                 saveParticipantsToStorage(); // Usar nuestra función de guardado
+                
+                // Also delete from IndexedDB
+                if (db) {
+                    const transaction = db.transaction(['participants'], 'readwrite');
+                    const objectStore = transaction.objectStore('participants');
+                    objectStore.delete(id);
+                }
+                
                 loadParticipants();
                 updateStats();
             }
@@ -1412,6 +1749,14 @@
             if (confirm('¿Estás seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
                 participants = [];
                 saveParticipantsToStorage(); // Usar nuestra función de guardado
+                
+                // Also clear IndexedDB
+                if (db) {
+                    const transaction = db.transaction(['participants'], 'readwrite');
+                    const objectStore = transaction.objectStore('participants');
+                    objectStore.clear();
+                }
+                
                 loadParticipants();
                 updateStats();
                 alert('Todos los datos han sido eliminados');
