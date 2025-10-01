@@ -32,7 +32,6 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: var(--dark);
-            overflow-x: hidden;
         }
 
         /* Navigation */
@@ -92,28 +91,19 @@
             background: rgba(37, 99, 235, 0.1);
         }
 
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--primary);
-            cursor: pointer;
-        }
-
-        /* Container */
+        /* Container - MODIFICADO PARA OCUPAR TODA LA PANTALLA */
         .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Cards */
+        /* Cards - MODIFICADO PARA OCUPAR MÁS ESPACIO */
         .card {
             background: var(--white);
             border-radius: 20px;
@@ -379,7 +369,6 @@
         .admin-actions {
             display: flex;
             gap: 1rem;
-            flex-wrap: wrap;
         }
 
         /* Stats Cards */
@@ -640,174 +629,64 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Mobile Responsive Styles */
-        @media (max-width: 992px) {
-            .admin-header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-            }
-            
-            .admin-actions {
-                width: 100%;
-                justify-content: flex-start;
-            }
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
             .navbar {
                 padding: 1rem;
-                flex-direction: row;
-                justify-content: space-between;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .nav-menu {
-                position: fixed;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background: rgba(255, 255, 255, 0.98);
                 flex-direction: column;
-                padding: 1rem;
-                box-shadow: var(--shadow);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                z-index: 999;
+                gap: 1rem;
             }
-            
-            .nav-menu.active {
-                transform: translateY(0);
-                opacity: 1;
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
             }
-            
+
             .nav-link {
-                width: 100%;
-                padding: 0.75rem;
-                border-bottom: 1px solid #e5e7eb;
+                padding: 0.5rem;
+                font-size: 0.9rem;
             }
-            
-            .nav-link:last-child {
-                border-bottom: none;
-            }
-            
+
             .nav-brand {
                 font-size: 1.5rem;
             }
-            
+
             .main-container {
-                padding: 1rem;
-                margin-top: 70px;
+                padding: 0;
             }
-            
+
             .card {
                 max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
             }
-            
+
             .card-header,
             .card-body {
                 padding: 1.5rem;
             }
-            
-            .card-header h1 {
-                font-size: 2rem;
-            }
-            
+
             .admin-content {
                 padding: 1rem;
             }
-            
+
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .table-header {
                 flex-direction: column;
                 gap: 1rem;
                 align-items: flex-start;
             }
-            
-            .table-wrapper {
-                overflow-x: auto;
-            }
-            
-            table {
-                min-width: 600px;
-            }
-            
-            .qr-section {
-                padding: 1rem;
-            }
-            
-            .qr-container {
-                padding: 1.5rem;
-                width: 100%;
-            }
-            
-            .qr-code img {
-                width: 150px;
-                height: 150px;
-            }
-            
-            .modal-content {
-                margin: 1rem;
-                max-width: calc(100% - 2rem);
-            }
-        }
 
-        @media (max-width: 480px) {
-            .card-header,
-            .card-body {
-                padding: 1rem;
-            }
-            
-            .card-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .form-control {
-                padding: 0.75rem;
-                font-size: 0.9rem;
-            }
-            
-            .btn {
-                padding: 0.75rem 1.5rem;
-                font-size: 0.9rem;
-            }
-            
-            .file-upload-label {
-                padding: 1.5rem;
-            }
-            
-            .admin-header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .stat-card {
-                padding: 1rem;
-            }
-            
-            .stat-value {
-                font-size: 1.5rem;
-            }
-            
-            th, td {
-                padding: 0.75rem 0.5rem;
-                font-size: 0.85rem;
-            }
-            
-            .voucher-img {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .btn-danger {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
+            .admin-actions {
+                width: 100%;
+                justify-content: flex-start;
             }
         }
 
@@ -817,12 +696,79 @@
             padding: 2rem;
             color: rgba(255, 255, 255, 0.8);
             margin-top: 2rem;
+            display: none; /* Footer oculto */
         }
 
         .footer a {
             color: var(--white);
             text-decoration: none;
             font-weight: 600;
+        }
+
+        /* Mobile optimizations for registration form */
+        @media (max-width: 768px) {
+            .main-container#registrationView {
+                padding: 0;
+                align-items: stretch;
+            }
+            
+            .card {
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .card-header {
+                padding: 2rem 1.5rem;
+            }
+            
+            .card-body {
+                padding: 1.5rem;
+                flex-grow: 1;
+            }
+            
+            .form-group {
+                margin-bottom: 1.25rem;
+            }
+            
+            .form-control {
+                padding: 0.875rem;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .file-upload-label {
+                padding: 1.5rem;
+            }
+            
+            .btn {
+                padding: 0.875rem;
+            }
+        }
+
+        /* Small mobile optimizations */
+        @media (max-width: 480px) {
+            .card-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .card-body {
+                padding: 1.25rem;
+            }
+            
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            .file-upload-label {
+                padding: 1.25rem;
+            }
+            
+            .btn {
+                padding: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -833,10 +779,7 @@
             <i class="fas fa-gift"></i>
             <span>RapiRifa LIZBETH</span>
         </div>
-        <button class="mobile-menu-toggle" id="mobileMenuToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="nav-menu" id="navMenu">
+        <div class="nav-menu">
             <a class="nav-link active" onclick="showView('participants')">
                 <i class="fas fa-users"></i>
                 <span>Participantes</span>
@@ -958,9 +901,7 @@
                 </form>
             </div>
         </div>
-        <div class="footer">
-            <p>&copy; 2024 Rapi Rifa - Todos los derechos reservados</p>
-        </div>
+        <!-- Footer eliminado -->
     </div>
 
     <!-- Admin Panel -->
@@ -1089,26 +1030,59 @@
                 username: 'admin',
                 password: 'rapi2024'
             },
-            storageKey: 'rapi_rifa_participants',
-            sessionKey: 'rapi_rifa_session'
+            // Usamos una clave de almacenamiento universal que funcione en cualquier dominio
+            storageKey: 'rapi_rifa_participants_universal',
+            sessionKey: 'rapi_rifa_session_universal'
         };
 
         // State
         let currentView = 'login';
-        let participants = JSON.parse(localStorage.getItem(CONFIG.storageKey)) || [];
+        let participants = [];
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             checkSession();
             setupEventListeners();
             updateFormLink();
-            // Check if the URL has the form hash
-            handleHash();
+            loadParticipantsFromStorage();
         });
+
+        // Función para cargar participantes desde el almacenamiento
+        function loadParticipantsFromStorage() {
+            try {
+                // Intentar cargar desde localStorage
+                const storedData = localStorage.getItem(CONFIG.storageKey);
+                if (storedData) {
+                    participants = JSON.parse(storedData);
+                } else {
+                    // Si no hay datos en localStorage, intentar cargar desde sessionStorage
+                    const sessionData = sessionStorage.getItem(CONFIG.storageKey);
+                    if (sessionData) {
+                        participants = JSON.parse(sessionData);
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                participants = [];
+            }
+        }
+
+        // Función para guardar participantes en el almacenamiento
+        function saveParticipantsToStorage() {
+            try {
+                const dataString = JSON.stringify(participants);
+                // Guardar en localStorage
+                localStorage.setItem(CONFIG.storageKey, dataString);
+                // También guardar en sessionStorage como respaldo
+                sessionStorage.setItem(CONFIG.storageKey, dataString);
+            } catch (error) {
+                console.error('Error al guardar datos:', error);
+            }
+        }
 
         // Check if user is already logged in
         function checkSession() {
-            const session = localStorage.getItem(CONFIG.sessionKey);
+            const session = localStorage.getItem(CONFIG.sessionKey) || sessionStorage.getItem(CONFIG.sessionKey);
             if (session === 'true') {
                 showAdminPanel();
             }
@@ -1124,25 +1098,6 @@
             
             // File upload
             document.getElementById('paymentProof').addEventListener('change', handleFileUpload);
-            
-            // Mobile menu toggle
-            document.getElementById('mobileMenuToggle').addEventListener('click', toggleMobileMenu);
-        }
-
-        // Toggle mobile menu
-        function toggleMobileMenu() {
-            const navMenu = document.getElementById('navMenu');
-            navMenu.classList.toggle('active');
-            
-            // Change icon
-            const icon = document.querySelector('#mobileMenuToggle i');
-            if (navMenu.classList.contains('active')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-times');
-            } else {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            }
         }
 
         // Handle login
@@ -1155,6 +1110,7 @@
             if (username === CONFIG.adminCredentials.username && 
                 password === CONFIG.adminCredentials.password) {
                 localStorage.setItem(CONFIG.sessionKey, 'true');
+                sessionStorage.setItem(CONFIG.sessionKey, 'true');
                 showAdminPanel();
             } else {
                 showLoginError('Usuario o contraseña incorrectos');
@@ -1222,7 +1178,7 @@
             };
             
             participants.push(participant);
-            localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+            saveParticipantsToStorage(); // Usar nuestra función de guardado
             
             showSuccessAlert();
             resetForm();
@@ -1330,12 +1286,6 @@
 
         // Show view
         function showView(view) {
-            // Close mobile menu if open
-            const navMenu = document.getElementById('navMenu');
-            if (navMenu.classList.contains('active')) {
-                toggleMobileMenu();
-            }
-            
             // Hide all sections
             document.getElementById('participantsSection').style.display = 'none';
             document.getElementById('qrSection').style.display = 'none';
@@ -1390,7 +1340,7 @@
         function deleteParticipant(id) {
             if (confirm('¿Estás seguro de eliminar este participante?')) {
                 participants = participants.filter(p => p.id !== id);
-                localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+                saveParticipantsToStorage(); // Usar nuestra función de guardado
                 loadParticipants();
                 updateStats();
             }
@@ -1461,7 +1411,7 @@
         function confirmClearData() {
             if (confirm('¿Estás seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
                 participants = [];
-                localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+                saveParticipantsToStorage(); // Usar nuestra función de guardado
                 loadParticipants();
                 updateStats();
                 alert('Todos los datos han sido eliminados');
@@ -1490,6 +1440,7 @@
         // Logout
         function logout() {
             localStorage.removeItem(CONFIG.sessionKey);
+            sessionStorage.removeItem(CONFIG.sessionKey);
             document.getElementById('adminPanel').classList.remove('active');
             document.getElementById('navbar').classList.remove('active');
             document.getElementById('loginView').style.display = 'flex';
@@ -1502,7 +1453,6 @@
         function handleHash() {
             const hash = window.location.hash;
             if (hash === '#form') {
-                // Show registration form directly without login
                 document.getElementById('loginView').style.display = 'none';
                 document.getElementById('registrationView').style.display = 'flex';
                 currentView = 'form';
@@ -1511,6 +1461,14 @@
 
         // Listen for hash changes
         window.addEventListener('hashchange', handleHash);
+        handleHash();
+
+        // Close modal on background click
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>
