@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,6 +6,7 @@
     <title>Rapi Rifa - Sistema de Participación</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Estilos CSS - sin cambios */
         * {
             margin: 0;
             padding: 0;
@@ -33,6 +33,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: var(--dark);
+            overflow-x: hidden;
         }
 
         /* Navigation */
@@ -92,19 +93,28 @@
             background: rgba(37, 99, 235, 0.1);
         }
 
-        /* Container - MODIFICADO PARA OCUPAR TODA LA PANTALLA */
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Container */
         .main-container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Cards - MODIFICADO PARA OCUPAR MÁS ESPACIO */
+        /* Cards */
         .card {
             background: var(--white);
             border-radius: 20px;
@@ -370,6 +380,7 @@
         .admin-actions {
             display: flex;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
         /* Stats Cards */
@@ -630,132 +641,174 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Sync Status */
-        .sync-status {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--white);
-            padding: 0.75rem 1rem;
-            border-radius: 50px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
+        /* Mobile Responsive Styles */
+        @media (max-width: 992px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .admin-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
         }
 
-        .sync-status.show {
-            opacity: 1;
-        }
-
-        .sync-status.success {
-            color: var(--success);
-        }
-
-        .sync-status.error {
-            color: var(--danger);
-        }
-
-        .sync-status i {
-            font-size: 1rem;
-        }
-
-        /* Firebase Status */
-        .firebase-status {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: var(--white);
-            padding: 0.75rem 1rem;
-            border-radius: 50px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .firebase-status.show {
-            opacity: 1;
-        }
-
-        .firebase-status.connected {
-            color: var(--success);
-        }
-
-        .firebase-status.error {
-            color: var(--danger);
-        }
-
-        .firebase-status i {
-            font-size: 1rem;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
             .navbar {
                 padding: 1rem;
-                flex-direction: column;
-                gap: 1rem;
+                flex-direction: row;
+                justify-content: space-between;
             }
-
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
             .nav-menu {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 0.5rem;
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.98);
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: var(--shadow);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                z-index: 999;
             }
-
+            
+            .nav-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            
             .nav-link {
-                padding: 0.5rem;
-                font-size: 0.9rem;
+                width: 100%;
+                padding: 0.75rem;
+                border-bottom: 1px solid #e5e7eb;
             }
-
+            
+            .nav-link:last-child {
+                border-bottom: none;
+            }
+            
             .nav-brand {
                 font-size: 1.5rem;
             }
-
+            
             .main-container {
-                padding: 0;
+                padding: 1rem;
+                margin-top: 70px;
             }
-
+            
             .card {
                 max-width: 100%;
-                margin: 0;
-                border-radius: 0;
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
             }
-
+            
             .card-header,
             .card-body {
                 padding: 1.5rem;
             }
-
+            
+            .card-header h1 {
+                font-size: 2rem;
+            }
+            
             .admin-content {
                 padding: 1rem;
             }
-
+            
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-
+            
             .table-header {
                 flex-direction: column;
                 gap: 1rem;
                 align-items: flex-start;
             }
-
-            .admin-actions {
+            
+            .table-wrapper {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            .qr-section {
+                padding: 1rem;
+            }
+            
+            .qr-container {
+                padding: 1.5rem;
                 width: 100%;
-                justify-content: flex-start;
+            }
+            
+            .qr-code img {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .modal-content {
+                margin: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card-header,
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .card-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-control {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .file-upload-label {
+                padding: 1.5rem;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .voucher-img {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .btn-danger {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
             }
         }
 
@@ -765,7 +818,6 @@
             padding: 2rem;
             color: rgba(255, 255, 255, 0.8);
             margin-top: 2rem;
-            display: none; /* Footer oculto */
         }
 
         .footer a {
@@ -774,70 +826,63 @@
             font-weight: 600;
         }
 
-        /* Mobile optimizations for registration form */
-        @media (max-width: 768px) {
-            .main-container#registrationView {
-                padding: 0;
-                align-items: stretch;
-            }
-            
-            .card {
-                max-width: 100%;
-                margin: 0;
-                border-radius: 0;
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
-            }
-            
-            .card-header {
-                padding: 2rem 1.5rem;
-            }
-            
-            .card-body {
-                padding: 1.5rem;
-                flex-grow: 1;
-            }
-            
-            .form-group {
-                margin-bottom: 1.25rem;
-            }
-            
-            .form-control {
-                padding: 0.875rem;
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-            
-            .file-upload-label {
-                padding: 1.5rem;
-            }
-            
-            .btn {
-                padding: 0.875rem;
-            }
+        /* Nuevo estilo para notificaciones en tiempo real */
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1500;
+            max-width: 350px;
         }
 
-        /* Small mobile optimizations */
-        @media (max-width: 480px) {
-            .card-header {
-                padding: 1.5rem 1rem;
-            }
-            
-            .card-body {
-                padding: 1.25rem;
-            }
-            
-            .form-group {
-                margin-bottom: 1rem;
-            }
-            
-            .file-upload-label {
-                padding: 1.25rem;
-            }
-            
-            .btn {
-                padding: 0.75rem;
-            }
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.success {
+            background: #f0fdf4;
+            color: var(--success);
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 0.25rem;
         }
     </style>
 </head>
@@ -848,7 +893,10 @@
             <i class="fas fa-gift"></i>
             <span>RapiRifa LIZBETH</span>
         </div>
-        <div class="nav-menu">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-menu" id="navMenu">
             <a class="nav-link active" onclick="showView('participants')">
                 <i class="fas fa-users"></i>
                 <span>Participantes</span>
@@ -872,10 +920,18 @@
         </div>
     </nav>
 
-    <!-- Firebase Status Indicator -->
-    <div class="firebase-status" id="firebaseStatus">
-        <i class="fas fa-database"></i>
-        <span id="firebaseStatusText">Conectando a Firebase...</span>
+    <!-- Notificación en tiempo real -->
+    <div class="notification" id="notification">
+        <div class="notification-icon success">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Nuevo Participante</div>
+            <div class="notification-message" id="notificationMessage">Se ha registrado un nuevo participante</div>
+        </div>
+        <button class="notification-close" onclick="hideNotification()">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
 
     <!-- Login View -->
@@ -976,7 +1032,6 @@
                 </form>
             </div>
         </div>
-        <!-- Footer eliminado -->
     </div>
 
     <!-- Admin Panel -->
@@ -1025,6 +1080,9 @@
                 <div class="table-container">
                     <div class="table-header">
                         <h2>Lista de Participantes</h2>
+                        <div class="refresh-indicator" id="refreshIndicator" style="display: none; color: var(--success);">
+                            <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+                        </div>
                     </div>
                     <div class="table-wrapper">
                         <table>
@@ -1098,10 +1156,6 @@
     <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    
     <script>
         // Configuration
         const CONFIG = {
@@ -1109,69 +1163,29 @@
                 username: 'admin',
                 password: 'rapi2024'
             },
-            sessionKey: 'rapi_rifa_session_universal'
+            storageKey: 'rapi_rifa_participants',
+            sessionKey: 'rapi_rifa_session',
+            refreshInterval: 5000 // Intervalo de actualización en milisegundos (5 segundos)
         };
-
-        // Firebase Configuration - REEMPLAZA CON TUS PROPIAS CREDENCIALES
-        const firebaseConfig = {
-            apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-            authDomain: "tu-proyecto.firebaseapp.com",
-            projectId: "tu-proyecto",
-            storageBucket: "tu-proyecto.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef123456789012345678"
-        };
-
-        // Initialize Firebase
-        let db;
-        let firebaseConnected = false;
-
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            firebaseConnected = true;
-            console.log("Firebase initialized successfully");
-        } catch (error) {
-            console.error("Error initializing Firebase:", error);
-            firebaseConnected = false;
-        }
 
         // State
         let currentView = 'login';
-        let participants = [];
-        let unsubscribe = null;
+        let participants = JSON.parse(localStorage.getItem(CONFIG.storageKey)) || [];
+        let refreshTimer = null;
+        let lastUpdateTime = Date.now();
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             checkSession();
             setupEventListeners();
             updateFormLink();
-            
-            // Show Firebase connection status
-            if (firebaseConnected) {
-                showFirebaseStatus('Conectado a Firebase', 'connected');
-            } else {
-                showFirebaseStatus('Error al conectar con Firebase', 'error');
-            }
+            // Check if the URL has the form hash
+            handleHash();
         });
-
-        // Show Firebase connection status
-        function showFirebaseStatus(message, type) {
-            const firebaseStatus = document.getElementById('firebaseStatus');
-            const firebaseStatusText = document.getElementById('firebaseStatusText');
-            
-            firebaseStatusText.textContent = message;
-            firebaseStatus.className = `firebase-status show ${type}`;
-            
-            // Hide after 5 seconds
-            setTimeout(() => {
-                firebaseStatus.classList.remove('show');
-            }, 5000);
-        }
 
         // Check if user is already logged in
         function checkSession() {
-            const session = localStorage.getItem(CONFIG.sessionKey) || sessionStorage.getItem(CONFIG.sessionKey);
+            const session = localStorage.getItem(CONFIG.sessionKey);
             if (session === 'true') {
                 showAdminPanel();
             }
@@ -1187,6 +1201,72 @@
             
             // File upload
             document.getElementById('paymentProof').addEventListener('change', handleFileUpload);
+            
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', toggleMobileMenu);
+            
+            // Evento de storage para detectar cambios en otras pestañas
+            window.addEventListener('storage', handleStorageChange);
+        }
+
+        // Manejar cambios en el almacenamiento local
+        function handleStorageChange(e) {
+            if (e.key === CONFIG.storageKey) {
+                // Actualizar la lista de participantes
+                participants = JSON.parse(localStorage.getItem(CONFIG.storageKey)) || [];
+                
+                // Si estamos en la vista de administrador, actualizar la tabla
+                if (currentView === 'admin') {
+                    updateParticipantsList();
+                    updateStats();
+                    
+                    // Mostrar notificación si hay nuevos participantes
+                    const newParticipants = participants.filter(p => 
+                        new Date(p.registrationDate).getTime() > lastUpdateTime
+                    );
+                    
+                    if (newParticipants.length > 0) {
+                        showNotification(newParticipants[0]);
+                        lastUpdateTime = Date.now();
+                    }
+                }
+            }
+        }
+
+        // Mostrar notificación de nuevo participante
+        function showNotification(participant) {
+            const notification = document.getElementById('notification');
+            const message = document.getElementById('notificationMessage');
+            
+            message.textContent = `${participant.fullName} se ha registrado con un monto de S/ ${participant.paymentAmount.toFixed(2)}`;
+            notification.classList.add('show');
+            
+            // Ocultar automáticamente después de 5 segundos
+            setTimeout(() => {
+                hideNotification();
+            }, 5000);
+        }
+
+        // Ocultar notificación
+        function hideNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.remove('show');
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+            
+            // Change icon
+            const icon = document.querySelector('#mobileMenuToggle i');
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
         }
 
         // Handle login
@@ -1199,7 +1279,6 @@
             if (username === CONFIG.adminCredentials.username && 
                 password === CONFIG.adminCredentials.password) {
                 localStorage.setItem(CONFIG.sessionKey, 'true');
-                sessionStorage.setItem(CONFIG.sessionKey, 'true');
                 showAdminPanel();
             } else {
                 showLoginError('Usuario o contraseña incorrectos');
@@ -1222,11 +1301,406 @@
             document.getElementById('navbar').classList.add('active');
             currentView = 'admin';
             
-            // Load participants from Firebase
-            loadParticipantsFromFirebase();
+            loadParticipants();
+            updateStats();
+            
+            // Iniciar el temporizador de actualización automática
+            startAutoRefresh();
         }
 
-        // Load participants from Firebase
-        function loadParticipantsFromFirebase() {
-            if (!firebaseConnected) {
-                console
+        // Iniciar actualización automática
+        function startAutoRefresh() {
+            // Limpiar cualquier temporizador existente
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+            }
+            
+            // Configurar nuevo temporizador
+            refreshTimer = setInterval(() => {
+                if (currentView === 'admin' && document.getElementById('participantsSection').style.display !== 'none') {
+                    // Mostrar indicador de actualización
+                    document.getElementById('refreshIndicator').style.display = 'block';
+                    
+                    // Actualizar datos
+                    participants = JSON.parse(localStorage.getItem(CONFIG.storageKey)) || [];
+                    updateParticipantsList();
+                    updateStats();
+                    
+                    // Ocultar indicador de actualización
+                    setTimeout(() => {
+                        document.getElementById('refreshIndicator').style.display = 'none';
+                    }, 500);
+                }
+            }, CONFIG.refreshInterval);
+        }
+
+        // Detener actualización automática
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalParticipants').textContent = participants.length;
+            
+            const totalAmount = participants.reduce((sum, p) => sum + (p.paymentAmount || 0), 0);
+            document.getElementById('totalAmount').textContent = `S/ ${totalAmount.toFixed(2)}`;
+            
+            const today = new Date().toDateString();
+            const todayCount = participants.filter(p => 
+                new Date(p.registrationDate).toDateString() === today
+            ).length;
+            document.getElementById('todayCount').textContent = todayCount;
+        }
+
+        // Load participants
+        function loadParticipants() {
+            updateParticipantsList();
+        }
+
+        // Actualizar lista de participantes
+        function updateParticipantsList() {
+            const tbody = document.getElementById('participantsTableBody');
+            tbody.innerHTML = '';
+            
+            participants.forEach((participant, index) => {
+                const row = createParticipantRow(participant, index + 1);
+                tbody.appendChild(row);
+            });
+        }
+
+        // Handle registration
+        function handleRegistration(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) return;
+            
+            const participant = {
+                id: Date.now(),
+                fullName: document.getElementById('fullName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                paymentAmount: parseFloat(document.getElementById('paymentAmount').value),
+                paymentProof: document.getElementById('imagePreview').querySelector('img')?.src || '',
+                registrationDate: new Date().toISOString()
+            };
+            
+            participants.push(participant);
+            localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+            
+            // Disparar evento de almacenamiento manualmente para que se actualice en tiempo real
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: CONFIG.storageKey,
+                newValue: JSON.stringify(participants)
+            }));
+            
+            showSuccessAlert();
+            resetForm();
+            
+            setTimeout(() => {
+                if (currentView === 'admin') {
+                    loadParticipants();
+                    updateStats();
+                }
+            }, 2000);
+        }
+
+        // Validate form
+        function validateForm() {
+            let isValid = true;
+            const fields = ['fullName', 'phoneNumber', 'paymentAmount'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const errorMsg = field.parentElement.querySelector('.error-message');
+                
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    errorMsg.classList.add('show');
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                    errorMsg.classList.remove('show');
+                }
+            });
+            
+            // Validate phone number
+            const phone = document.getElementById('phoneNumber');
+            if (phone.value && !/^[0-9]{9}$/.test(phone.value)) {
+                phone.classList.add('error');
+                phone.parentElement.querySelector('.error-message').classList.add('show');
+                isValid = false;
+            }
+            
+            // Validate file
+            const fileInput = document.getElementById('paymentProof');
+            if (!fileInput.files.length) {
+                document.getElementById('fileLabel').parentElement.querySelector('.error-message').classList.add('show');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // Handle file upload
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    showError('El archivo no debe superar los 5MB');
+                    e.target.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').innerHTML = 
+                        `<img src="${e.target.result}" alt="Voucher">`;
+                    document.getElementById('fileLabel').classList.add('has-file');
+                    document.getElementById('fileLabel').innerHTML = `
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success);"></i>
+                        <div>
+                            <div style="font-weight: 600;">${file.name}</div>
+                            <div style="font-size: 0.875rem; color: var(--gray);">Click para cambiar</div>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Show success alert
+        function showSuccessAlert() {
+            const alert = document.getElementById('successAlert');
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+
+        // Show error alert
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            const alert = document.getElementById('errorAlert');
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('registrationForm').reset();
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('fileLabel').classList.remove('has-file');
+            document.getElementById('fileLabel').innerHTML = `
+                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem;"></i>
+                <div>
+                    <div style="font-weight: 600;">Haz clic para subir el voucher</div>
+                    <div style="font-size: 0.875rem; color: var(--gray);">PNG, JPG hasta 5MB</div>
+                </div>
+            `;
+        }
+
+        // Show view
+        function showView(view) {
+            // Close mobile menu if open
+            const navMenu = document.getElementById('navMenu');
+            if (navMenu.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+            
+            // Hide all sections
+            document.getElementById('participantsSection').style.display = 'none';
+            document.getElementById('qrSection').style.display = 'none';
+            
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            
+            // Show selected section
+            switch(view) {
+                case 'participants':
+                    document.getElementById('participantsSection').style.display = 'block';
+                    document.querySelectorAll('.nav-link')[0].classList.add('active');
+                    loadParticipants();
+                    updateStats();
+                    startAutoRefresh(); // Iniciar actualización automática
+                    break;
+                case 'qr':
+                    document.getElementById('qrSection').style.display = 'block';
+                    document.querySelectorAll('.nav-link')[1].classList.add('active');
+                    generateQRCode();
+                    stopAutoRefresh(); // Detener actualización automática
+                    break;
+            }
+        }
+
+        // Create participant row
+        function createParticipantRow(participant, index) {
+            const row = document.createElement('tr');
+            const date = new Date(participant.registrationDate);
+            const formattedDate = date.toLocaleDateString('es-PE') + ' ' + date.toLocaleTimeString('es-PE', {hour: '2-digit', minute: '2-digit'});
+            
+            row.innerHTML = `
+                <td>${index}</td>
+                <td>${participant.fullName}</td>
+                <td>${participant.phoneNumber}</td>
+                <td>S/ ${participant.paymentAmount.toFixed(2)}</td>
+                <td>${formattedDate}</td>
+                <td>
+                    ${participant.paymentProof ? 
+                        `<img src="${participant.paymentProof}" class="voucher-img" onclick="showImageModal('${participant.paymentProof}')">` : 
+                        '<span class="badge badge-success">Verificado</span>'
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-danger" onclick="deleteParticipant(${participant.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            return row;
+        }
+
+        // Delete participant
+        function deleteParticipant(id) {
+            if (confirm('¿Estás seguro de eliminar este participante?')) {
+                participants = participants.filter(p => p.id !== id);
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+                
+                // Disparar evento de almacenamiento manualmente
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: CONFIG.storageKey,
+                    newValue: JSON.stringify(participants)
+                }));
+                
+                loadParticipants();
+                updateStats();
+            }
+        }
+
+        // Generate QR Code
+        function generateQRCode() {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            const formUrl = window.location.origin + window.location.pathname + '#form';
+            new QRCode(qrContainer, {
+                text: formUrl,
+                width: 200,
+                height: 200,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Update form link
+        function updateFormLink() {
+            const formUrl = window.location.origin + window.location.pathname + '#form';
+            document.getElementById('formLink').value = formUrl;
+        }
+
+        // Copy link
+        function copyLink() {
+            const linkInput = document.getElementById('formLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        // Export data - Solo con los campos solicitados
+        function exportData() {
+            if (participants.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            // Solo incluir los campos solicitados: nombres, celular y monto
+            csvContent += "Nombre Completo,Celular Yape,Monto Pagado\n";
+            
+            participants.forEach(p => {
+                csvContent += `"${p.fullName}",${p.phoneNumber},${p.paymentAmount}\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `rapi_rifa_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Confirm clear data
+        function confirmClearData() {
+            if (confirm('¿Estás seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
+                participants = [];
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(participants));
+                
+                // Disparar evento de almacenamiento manualmente
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: CONFIG.storageKey,
+                    newValue: JSON.stringify(participants)
+                }));
+                
+                loadParticipants();
+                updateStats();
+                alert('Todos los datos han sido eliminados');
+            }
+        }
+
+        // Show registration form
+        function showRegistrationForm() {
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('navbar').classList.remove('active');
+            document.getElementById('registrationView').style.display = 'flex';
+            resetForm();
+            stopAutoRefresh(); // Detener actualización automática
+        }
+
+        // Show image modal
+        function showImageModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem(CONFIG.sessionKey);
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('navbar').classList.remove('active');
+            document.getElementById('loginView').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            currentView = 'login';
+            stopAutoRefresh(); // Detener actualización automática
+        }
+
+        // Handle URL hash
+        function handleHash() {
+            const hash = window.location.hash;
+            if (hash === '#form') {
+                // Show registration form directly without login
+                document.getElementById('loginView').style.display = 'none';
+                document.getElementById('registrationView').style.display = 'flex';
+                currentView = 'form';
+            }
+        }
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', handleHash);
+    </script>
+</body>
+</html>
