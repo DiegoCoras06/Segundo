@@ -664,6 +664,40 @@
             font-size: 1rem;
         }
 
+        /* Firebase Status */
+        .firebase-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--white);
+            padding: 0.75rem 1rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .firebase-status.show {
+            opacity: 1;
+        }
+
+        .firebase-status.connected {
+            color: var(--success);
+        }
+
+        .firebase-status.error {
+            color: var(--danger);
+        }
+
+        .firebase-status i {
+            font-size: 1rem;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .navbar {
@@ -837,6 +871,12 @@
             </a>
         </div>
     </nav>
+
+    <!-- Firebase Status Indicator -->
+    <div class="firebase-status" id="firebaseStatus">
+        <i class="fas fa-database"></i>
+        <span id="firebaseStatusText">Conectando a Firebase...</span>
+    </div>
 
     <!-- Login View -->
     <div class="main-container" id="loginView">
@@ -1055,14 +1095,12 @@
         </div>
     </div>
 
-    <!-- Sync Status Indicator -->
-    <div class="sync-status" id="syncStatus">
-        <i class="fas fa-sync-alt"></i>
-        <span id="syncStatusText">Sincronizando datos...</span>
-    </div>
-
     <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     
     <script>
         // Configuration
@@ -1071,323 +1109,64 @@
                 username: 'admin',
                 password: 'rapi2024'
             },
-            // Usamos una clave de almacenamiento universal que funcione en cualquier dominio
-            storageKey: 'rapi_rifa_participants_universal',
-            sessionKey: 'rapi_rifa_session_universal',
-            // Configuración de sincronización
-            syncInterval: 30000, // 30 segundos
-            maxRetries: 3,
-            retryDelay: 5000 // 5 segundos
+            sessionKey: 'rapi_rifa_session_universal'
         };
+
+        // Firebase Configuration - REEMPLAZA CON TUS PROPIAS CREDENCIALES
+        const firebaseConfig = {
+            apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            authDomain: "tu-proyecto.firebaseapp.com",
+            projectId: "tu-proyecto",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456789012345678"
+        };
+
+        // Initialize Firebase
+        let db;
+        let firebaseConnected = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            firebaseConnected = true;
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            firebaseConnected = false;
+        }
 
         // State
         let currentView = 'login';
         let participants = [];
-        let syncTimer = null;
-        let isOnline = navigator.onLine;
-        let pendingSync = false;
-
-        // IndexedDB setup
-        let db = null;
-
-        // Initialize IndexedDB
-        function initIndexedDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('RapiRifaDB', 1);
-                
-                request.onerror = (event) => {
-                    console.error('IndexedDB error:', event.target.error);
-                    reject(event.target.error);
-                };
-                
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    console.log('IndexedDB initialized successfully');
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    
-                    if (!db.objectStoreNames.contains('participants')) {
-                        const objectStore = db.createObjectStore('participants', { keyPath: 'id' });
-                        objectStore.createIndex('registrationDate', 'registrationDate', { unique: false });
-                    }
-                };
-            });
-        }
-
-        // Save participant to IndexedDB
-        function saveParticipantToIndexedDB(participant) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['participants'], 'readwrite');
-                const objectStore = transaction.objectStore('participants');
-                const request = objectStore.add(participant);
-                
-                request.onsuccess = () => {
-                    resolve();
-                };
-                
-                request.onerror = (event) => {
-                    console.error('Error saving to IndexedDB:', event.target.error);
-                    reject(event.target.error);
-                };
-            });
-        }
-
-        // Get all participants from IndexedDB
-        function getParticipantsFromIndexedDB() {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['participants'], 'readonly');
-                const objectStore = transaction.objectStore('participants');
-                const request = objectStore.getAll();
-                
-                request.onsuccess = (event) => {
-                    resolve(event.target.result);
-                };
-                
-                request.onerror = (event) => {
-                    console.error('Error getting from IndexedDB:', event.target.error);
-                    reject(event.target.error);
-                };
-            });
-        }
+        let unsubscribe = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize IndexedDB first
-            initIndexedDB()
-                .then(() => {
-                    // Then initialize the rest of the app
-                    checkSession();
-                    setupEventListeners();
-                    updateFormLink();
-                    loadParticipantsFromStorage();
-                    
-                    // Set up online/offline event listeners
-                    window.addEventListener('online', handleOnline);
-                    window.addEventListener('offline', handleOffline);
-                    
-                    // Start periodic sync
-                    startPeriodicSync();
-                })
-                .catch(error => {
-                    console.error('Failed to initialize IndexedDB:', error);
-                    // Fallback to localStorage if IndexedDB fails
-                    checkSession();
-                    setupEventListeners();
-                    updateFormLink();
-                    loadParticipantsFromStorage();
-                });
+            checkSession();
+            setupEventListeners();
+            updateFormLink();
+            
+            // Show Firebase connection status
+            if (firebaseConnected) {
+                showFirebaseStatus('Conectado a Firebase', 'connected');
+            } else {
+                showFirebaseStatus('Error al conectar con Firebase', 'error');
+            }
         });
 
-        // Handle online event
-        function handleOnline() {
-            isOnline = true;
-            showSyncStatus('Conexión restablecida', 'success');
-            if (pendingSync) {
-                syncData();
-            }
-        }
-
-        // Handle offline event
-        function handleOffline() {
-            isOnline = false;
-            showSyncStatus('Trabajando sin conexión', 'error');
-        }
-
-        // Start periodic sync
-        function startPeriodicSync() {
-            if (syncTimer) {
-                clearInterval(syncTimer);
-            }
+        // Show Firebase connection status
+        function showFirebaseStatus(message, type) {
+            const firebaseStatus = document.getElementById('firebaseStatus');
+            const firebaseStatusText = document.getElementById('firebaseStatusText');
             
-            syncTimer = setInterval(() => {
-                if (isOnline) {
-                    syncData();
-                }
-            }, CONFIG.syncInterval);
-        }
-
-        // Sync data between storage mechanisms
-        function syncData() {
-            if (!isOnline) {
-                pendingSync = true;
-                return;
-            }
+            firebaseStatusText.textContent = message;
+            firebaseStatus.className = `firebase-status show ${type}`;
             
-            showSyncStatus('Sincronizando datos...', 'info');
-            
-            try {
-                // Get data from IndexedDB
-                if (db) {
-                    getParticipantsFromIndexedDB()
-                        .then(indexedDBData => {
-                            // Get data from localStorage
-                            const localStorageData = JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]');
-                            
-                            // Merge data
-                            const mergedData = mergeData(indexedDBData, localStorageData);
-                            
-                            // Save merged data to all storage mechanisms
-                            participants = mergedData;
-                            saveParticipantsToStorage();
-                            
-                            // Update UI if in admin panel
-                            if (currentView === 'admin') {
-                                loadParticipants();
-                                updateStats();
-                            }
-                            
-                            showSyncStatus('Datos sincronizados', 'success');
-                            pendingSync = false;
-                        })
-                        .catch(error => {
-                            console.error('Error syncing from IndexedDB:', error);
-                            fallbackSync();
-                        });
-                } else {
-                    fallbackSync();
-                }
-            } catch (error) {
-                console.error('Error during sync:', error);
-                showSyncStatus('Error al sincronizar', 'error');
-            }
-        }
-
-        // Fallback sync using localStorage
-        function fallbackSync() {
-            try {
-                const localStorageData = JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]');
-                participants = localStorageData;
-                
-                // Update UI if in admin panel
-                if (currentView === 'admin') {
-                    loadParticipants();
-                    updateStats();
-                }
-                
-                showSyncStatus('Datos sincronizados', 'success');
-                pendingSync = false;
-            } catch (error) {
-                console.error('Error in fallback sync:', error);
-                showSyncStatus('Error al sincronizar', 'error');
-            }
-        }
-
-        // Merge data from different sources
-        function mergeData(source1, source2) {
-            const merged = [...source1];
-            
-            // Add items from source2 that don't exist in source1
-            source2.forEach(item2 => {
-                if (!merged.find(item1 => item1.id === item2.id)) {
-                    merged.push(item2);
-                }
-            });
-            
-            // Sort by registration date (newest first)
-            merged.sort((a, b) => new Date(b.registrationDate) - new Date(a.registrationDate));
-            
-            return merged;
-        }
-
-        // Show sync status
-        function showSyncStatus(message, type) {
-            const syncStatus = document.getElementById('syncStatus');
-            const syncStatusText = document.getElementById('syncStatusText');
-            
-            syncStatusText.textContent = message;
-            syncStatus.className = `sync-status show ${type}`;
-            
-            // Hide after 3 seconds
+            // Hide after 5 seconds
             setTimeout(() => {
-                syncStatus.classList.remove('show');
-            }, 3000);
-        }
-
-        // Función para cargar participantes desde el almacenamiento
-        function loadParticipantsFromStorage() {
-            try {
-                // Intentar cargar desde IndexedDB
-                if (db) {
-                    getParticipantsFromIndexedDB()
-                        .then(data => {
-                            participants = data;
-                            
-                            // Update UI if in admin panel
-                            if (currentView === 'admin') {
-                                loadParticipants();
-                                updateStats();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error loading from IndexedDB:', error);
-                            // Fallback to localStorage
-                            loadFromLocalStorage();
-                        });
-                } else {
-                    // Fallback to localStorage
-                    loadFromLocalStorage();
-                }
-            } catch (error) {
-                console.error('Error al cargar datos:', error);
-                participants = [];
-            }
-        }
-
-        // Load from localStorage as fallback
-        function loadFromLocalStorage() {
-            try {
-                // Intentar cargar desde localStorage
-                const storedData = localStorage.getItem(CONFIG.storageKey);
-                if (storedData) {
-                    participants = JSON.parse(storedData);
-                } else {
-                    // Si no hay datos en localStorage, intentar cargar desde sessionStorage
-                    const sessionData = sessionStorage.getItem(CONFIG.storageKey);
-                    if (sessionData) {
-                        participants = JSON.parse(sessionData);
-                    }
-                }
-                
-                // Update UI if in admin panel
-                if (currentView === 'admin') {
-                    loadParticipants();
-                    updateStats();
-                }
-            } catch (error) {
-                console.error('Error loading from localStorage:', error);
-                participants = [];
-            }
-        }
-
-        // Función para guardar participantes en el almacenamiento
-        function saveParticipantsToStorage() {
-            try {
-                const dataString = JSON.stringify(participants);
-                
-                // Guardar en localStorage
-                localStorage.setItem(CONFIG.storageKey, dataString);
-                // También guardar en sessionStorage como respaldo
-                sessionStorage.setItem(CONFIG.storageKey, dataString);
-                
-                // Guardar en IndexedDB si está disponible
-                if (db) {
-                    const transaction = db.transaction(['participants'], 'readwrite');
-                    const objectStore = transaction.objectStore('participants');
-                    
-                    // Clear existing data
-                    objectStore.clear();
-                    
-                    // Add all participants
-                    participants.forEach(participant => {
-                        objectStore.add(participant);
-                    });
-                }
-            } catch (error) {
-                console.error('Error al guardar datos:', error);
-            }
+                firebaseStatus.classList.remove('show');
+            }, 5000);
         }
 
         // Check if user is already logged in
@@ -1443,377 +1222,11 @@
             document.getElementById('navbar').classList.add('active');
             currentView = 'admin';
             
-            loadParticipants();
-            updateStats();
+            // Load participants from Firebase
+            loadParticipantsFromFirebase();
         }
 
-        // Update statistics
-        function updateStats() {
-            document.getElementById('totalParticipants').textContent = participants.length;
-            
-            const totalAmount = participants.reduce((sum, p) => sum + (p.paymentAmount || 0), 0);
-            document.getElementById('totalAmount').textContent = `S/ ${totalAmount.toFixed(2)}`;
-            
-            const today = new Date().toDateString();
-            const todayCount = participants.filter(p => 
-                new Date(p.registrationDate).toDateString() === today
-            ).length;
-            document.getElementById('todayCount').textContent = todayCount;
-        }
-
-        // Load participants
-        function loadParticipants() {
-            const tbody = document.getElementById('participantsTableBody');
-            tbody.innerHTML = '';
-            
-            participants.forEach((participant, index) => {
-                const row = createParticipantRow(participant, index + 1);
-                tbody.appendChild(row);
-            });
-        }
-
-        // Handle registration
-        function handleRegistration(e) {
-            e.preventDefault();
-            
-            if (!validateForm()) return;
-            
-            const participant = {
-                id: Date.now(),
-                fullName: document.getElementById('fullName').value,
-                phoneNumber: document.getElementById('phoneNumber').value,
-                paymentAmount: parseFloat(document.getElementById('paymentAmount').value),
-                paymentProof: document.getElementById('imagePreview').querySelector('img')?.src || '',
-                registrationDate: new Date().toISOString()
-            };
-            
-            participants.push(participant);
-            saveParticipantsToStorage(); // Usar nuestra función de guardado
-            
-            // Try to save to IndexedDB as well
-            if (db) {
-                saveParticipantToIndexedDB(participant)
-                    .then(() => {
-                        console.log('Participant saved to IndexedDB');
-                    })
-                    .catch(error => {
-                        console.error('Error saving to IndexedDB:', error);
-                    });
-            }
-            
-            showSuccessAlert();
-            resetForm();
-            
-            // Trigger sync
-            if (isOnline) {
-                syncData();
-            } else {
-                pendingSync = true;
-                showSyncStatus('Se sincronizará cuando haya conexión', 'info');
-            }
-            
-            setTimeout(() => {
-                if (currentView === 'admin') {
-                    loadParticipants();
-                    updateStats();
-                }
-            }, 2000);
-        }
-
-        // Validate form
-        function validateForm() {
-            let isValid = true;
-            const fields = ['fullName', 'phoneNumber', 'paymentAmount'];
-            
-            fields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                const errorMsg = field.parentElement.querySelector('.error-message');
-                
-                if (!field.value.trim()) {
-                    field.classList.add('error');
-                    errorMsg.classList.add('show');
-                    isValid = false;
-                } else {
-                    field.classList.remove('error');
-                    errorMsg.classList.remove('show');
-                }
-            });
-            
-            // Validate phone number
-            const phone = document.getElementById('phoneNumber');
-            if (phone.value && !/^[0-9]{9}$/.test(phone.value)) {
-                phone.classList.add('error');
-                phone.parentElement.querySelector('.error-message').classList.add('show');
-                isValid = false;
-            }
-            
-            // Validate file
-            const fileInput = document.getElementById('paymentProof');
-            if (!fileInput.files.length) {
-                document.getElementById('fileLabel').parentElement.querySelector('.error-message').classList.add('show');
-                isValid = false;
-            }
-            
-            return isValid;
-        }
-
-        // Handle file upload
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    showError('El archivo no debe superar los 5MB');
-                    e.target.value = '';
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').innerHTML = 
-                        `<img src="${e.target.result}" alt="Voucher">`;
-                    document.getElementById('fileLabel').classList.add('has-file');
-                    document.getElementById('fileLabel').innerHTML = `
-                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success);"></i>
-                        <div>
-                            <div style="font-weight: 600;">${file.name}</div>
-                            <div style="font-size: 0.875rem; color: var(--gray);">Click para cambiar</div>
-                        </div>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Show success alert
-        function showSuccessAlert() {
-            const alert = document.getElementById('successAlert');
-            alert.classList.add('show');
-            setTimeout(() => alert.classList.remove('show'), 3000);
-        }
-
-        // Show error alert
-        function showError(message) {
-            document.getElementById('errorText').textContent = message;
-            const alert = document.getElementById('errorAlert');
-            alert.classList.add('show');
-            setTimeout(() => alert.classList.remove('show'), 3000);
-        }
-
-        // Reset form
-        function resetForm() {
-            document.getElementById('registrationForm').reset();
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('fileLabel').classList.remove('has-file');
-            document.getElementById('fileLabel').innerHTML = `
-                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem;"></i>
-                <div>
-                    <div style="font-weight: 600;">Haz clic para subir el voucher</div>
-                    <div style="font-size: 0.875rem; color: var(--gray);">PNG, JPG hasta 5MB</div>
-                </div>
-            `;
-        }
-
-        // Show view
-        function showView(view) {
-            // Hide all sections
-            document.getElementById('participantsSection').style.display = 'none';
-            document.getElementById('qrSection').style.display = 'none';
-            
-            // Update nav
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            
-            // Show selected section
-            switch(view) {
-                case 'participants':
-                    document.getElementById('participantsSection').style.display = 'block';
-                    document.querySelectorAll('.nav-link')[0].classList.add('active');
-                    loadParticipants();
-                    updateStats();
-                    break;
-                case 'qr':
-                    document.getElementById('qrSection').style.display = 'block';
-                    document.querySelectorAll('.nav-link')[1].classList.add('active');
-                    generateQRCode();
-                    break;
-            }
-        }
-
-        // Create participant row
-        function createParticipantRow(participant, index) {
-            const row = document.createElement('tr');
-            const date = new Date(participant.registrationDate);
-            const formattedDate = date.toLocaleDateString('es-PE') + ' ' + date.toLocaleTimeString('es-PE', {hour: '2-digit', minute: '2-digit'});
-            
-            row.innerHTML = `
-                <td>${index}</td>
-                <td>${participant.fullName}</td>
-                <td>${participant.phoneNumber}</td>
-                <td>S/ ${participant.paymentAmount.toFixed(2)}</td>
-                <td>${formattedDate}</td>
-                <td>
-                    ${participant.paymentProof ? 
-                        `<img src="${participant.paymentProof}" class="voucher-img" onclick="showImageModal('${participant.paymentProof}')">` : 
-                        '<span class="badge badge-success">Verificado</span>'
-                    }
-                </td>
-                <td>
-                    <button class="btn btn-danger" onclick="deleteParticipant(${participant.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            return row;
-        }
-
-        // Delete participant
-        function deleteParticipant(id) {
-            if (confirm('¿Estás seguro de eliminar este participante?')) {
-                participants = participants.filter(p => p.id !== id);
-                saveParticipantsToStorage(); // Usar nuestra función de guardado
-                
-                // Also delete from IndexedDB
-                if (db) {
-                    const transaction = db.transaction(['participants'], 'readwrite');
-                    const objectStore = transaction.objectStore('participants');
-                    objectStore.delete(id);
-                }
-                
-                loadParticipants();
-                updateStats();
-            }
-        }
-
-        // Generate QR Code
-        function generateQRCode() {
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
-            
-            const formUrl = window.location.origin + window.location.pathname + '#form';
-            new QRCode(qrContainer, {
-                text: formUrl,
-                width: 200,
-                height: 200,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-
-        // Update form link
-        function updateFormLink() {
-            const formUrl = window.location.origin + window.location.pathname + '#form';
-            document.getElementById('formLink').value = formUrl;
-        }
-
-        // Copy link
-        function copyLink() {
-            const linkInput = document.getElementById('formLink');
-            linkInput.select();
-            document.execCommand('copy');
-            
-            // Show feedback
-            const btn = event.target.closest('button');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-            }, 2000);
-        }
-
-        // Export data - Solo con los campos solicitados
-        function exportData() {
-            if (participants.length === 0) {
-                alert('No hay datos para exportar');
-                return;
-            }
-            
-            let csvContent = "data:text/csv;charset=utf-8,";
-            // Solo incluir los campos solicitados: nombres, celular y monto
-            csvContent += "Nombre Completo,Celular Yape,Monto Pagado\n";
-            
-            participants.forEach(p => {
-                csvContent += `"${p.fullName}",${p.phoneNumber},${p.paymentAmount}\n`;
-            });
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `rapi_rifa_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Confirm clear data
-        function confirmClearData() {
-            if (confirm('¿Estás seguro de eliminar todos los datos? Esta acción no se puede deshacer.')) {
-                participants = [];
-                saveParticipantsToStorage(); // Usar nuestra función de guardado
-                
-                // Also clear IndexedDB
-                if (db) {
-                    const transaction = db.transaction(['participants'], 'readwrite');
-                    const objectStore = transaction.objectStore('participants');
-                    objectStore.clear();
-                }
-                
-                loadParticipants();
-                updateStats();
-                alert('Todos los datos han sido eliminados');
-            }
-        }
-
-        // Show registration form
-        function showRegistrationForm() {
-            document.getElementById('adminPanel').classList.remove('active');
-            document.getElementById('navbar').classList.remove('active');
-            document.getElementById('registrationView').style.display = 'flex';
-            resetForm();
-        }
-
-        // Show image modal
-        function showImageModal(imageSrc) {
-            document.getElementById('modalImage').src = imageSrc;
-            document.getElementById('imageModal').classList.add('show');
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('imageModal').classList.remove('show');
-        }
-
-        // Logout
-        function logout() {
-            localStorage.removeItem(CONFIG.sessionKey);
-            sessionStorage.removeItem(CONFIG.sessionKey);
-            document.getElementById('adminPanel').classList.remove('active');
-            document.getElementById('navbar').classList.remove('active');
-            document.getElementById('loginView').style.display = 'flex';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            currentView = 'login';
-        }
-
-        // Handle URL hash
-        function handleHash() {
-            const hash = window.location.hash;
-            if (hash === '#form') {
-                document.getElementById('loginView').style.display = 'none';
-                document.getElementById('registrationView').style.display = 'flex';
-                currentView = 'form';
-            }
-        }
-
-        // Listen for hash changes
-        window.addEventListener('hashchange', handleHash);
-        handleHash();
-
-        // Close modal on background click
-        document.getElementById('imageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-    </script>
-</body>
-</html>
+        // Load participants from Firebase
+        function loadParticipantsFromFirebase() {
+            if (!firebaseConnected) {
+                console
